@@ -21,6 +21,28 @@ function Navbar() {
             </span>
           </Link>
 
+          {/* Center Navigation */}
+          <div className="hidden md:flex items-center space-x-6">
+            <Link
+              to="/gallery"
+              className="text-gray-700 font-medium hover:text-[#0084D1] transition-colors"
+            >
+              Gallery
+            </Link>
+            <Link
+              to="/create"
+              className="text-gray-700 font-medium hover:text-[#0084D1] transition-colors"
+            >
+              Create Art
+            </Link>
+            <Link
+              to="/about"
+              className="text-gray-700 font-medium hover:text-[#0084D1] transition-colors"
+            >
+              About
+            </Link>
+          </div>
+
           {/* Right Side Navigation */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
