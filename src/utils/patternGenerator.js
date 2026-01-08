@@ -1,11 +1,88 @@
 // Custom geometric pattern generator (Trianglify alternative)
 // Generates SVG-based low-poly patterns
 
-export const generatePattern = (width = 800, height = 600, seed = Math.random()) => {
+// Emotion-based color palettes
+const EMOTION_PALETTES = {
+  passion: {
+    baseHue: 0, // Red
+    hueRange: 30,
+    saturationBase: 60,
+    saturationRange: 30,
+    lightnessBase: 40,
+    lightnessRange: 25,
+    colors: ['#FF1744', '#D50000', '#FF5252', '#FF8A80', '#C62828']
+  },
+  calm: {
+    baseHue: 200, // Blue
+    hueRange: 40,
+    saturationBase: 50,
+    saturationRange: 40,
+    lightnessBase: 45,
+    lightnessRange: 30,
+    colors: ['#0084D1', '#2196F3', '#64B5F6', '#1565C0', '#42A5F5']
+  },
+  joy: {
+    baseHue: 45, // Yellow/Orange
+    hueRange: 35,
+    saturationBase: 70,
+    saturationRange: 25,
+    lightnessBase: 50,
+    lightnessRange: 20,
+    colors: ['#FFD600', '#FF9800', '#FFC107', '#FFAB00', '#FF6F00']
+  },
+  mystery: {
+    baseHue: 270, // Purple
+    hueRange: 40,
+    saturationBase: 55,
+    saturationRange: 35,
+    lightnessBase: 35,
+    lightnessRange: 25,
+    colors: ['#7C4DFF', '#651FFF', '#AA00FF', '#9C27B0', '#6200EA']
+  },
+  nature: {
+    baseHue: 120, // Green
+    hueRange: 45,
+    saturationBase: 50,
+    saturationRange: 35,
+    lightnessBase: 40,
+    lightnessRange: 25,
+    colors: ['#00C853', '#4CAF50', '#8BC34A', '#2E7D32', '#66BB6A']
+  },
+  serenity: {
+    baseHue: 180, // Teal/Cyan
+    hueRange: 35,
+    saturationBase: 45,
+    saturationRange: 30,
+    lightnessBase: 45,
+    lightnessRange: 25,
+    colors: ['#00BCD4', '#26C6DA', '#00ACC1', '#4DD0E1', '#0097A7']
+  }
+};
+
+// Default palette (calm/blue)
+const DEFAULT_PALETTE = EMOTION_PALETTES.calm;
+
+export const generatePattern = (width = 800, height = 600, seed = Math.random(), emotion = 'calm') => {
   const cellSize = 60;
   const variance = 0.75;
   const cols = Math.ceil(width / cellSize) + 1;
   const rows = Math.ceil(height / cellSize) + 1;
+  
+  // Get emotion palette (fallback to calm/blue if not found)
+  const palette = EMOTION_PALETTES[emotion?.toLowerCase()] || DEFAULT_PALETTE;
+  
+  // Convert seed to numeric value if it's a string (UUID)
+  let numericSeed = seed;
+  if (typeof seed === 'string') {
+    // Hash the string to create a numeric seed
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      const char = seed.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    numericSeed = Math.abs(hash) / 2147483647; // Normalize to 0-1
+  }
   
   // Seeded random number generator
   const random = (seed) => {
@@ -13,7 +90,7 @@ export const generatePattern = (width = 800, height = 600, seed = Math.random())
     return x - Math.floor(x);
   };
   
-  let currentSeed = seed * 1000;
+  let currentSeed = numericSeed * 1000;
   const seededRandom = () => random(currentSeed++);
   
   // Generate grid points with variance
@@ -26,13 +103,12 @@ export const generatePattern = (width = 800, height = 600, seed = Math.random())
     }
   }
   
-  // Generate color palette (blue-ish theme based on #0084D1)
-  const baseHue = 200; // Blue range
+  // Generate color palette based on emotion
   const colors = [];
   for (let i = 0; i < 5; i++) {
-    const hue = baseHue + (seededRandom() - 0.5) * 40;
-    const saturation = 50 + seededRandom() * 40;
-    const lightness = 40 + seededRandom() * 30;
+    const hue = palette.baseHue + (seededRandom() - 0.5) * palette.hueRange;
+    const saturation = palette.saturationBase + seededRandom() * palette.saturationRange;
+    const lightness = palette.lightnessBase + seededRandom() * palette.lightnessRange;
     colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
   }
   
@@ -78,7 +154,11 @@ export const generatePattern = (width = 800, height = 600, seed = Math.random())
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
-export const generatePatternElement = (width, height, seed) => {
-  const pattern = generatePattern(width, height, seed);
+export const generatePatternElement = (width, height, seed, emotion) => {
+  const pattern = generatePattern(width, height, seed, emotion);
   return pattern;
 };
+
+// Export emotion palettes for UI usage
+export const EMOTIONS = Object.keys(EMOTION_PALETTES);
+export const getEmotionColors = (emotion) => EMOTION_PALETTES[emotion?.toLowerCase()]?.colors || DEFAULT_PALETTE.colors;

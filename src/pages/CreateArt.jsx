@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chip, Stepper, Step, StepLabel } from '@mui/material';
+import CryptoJS from 'crypto-js';
 import { generatePattern } from '../utils/patternGenerator';
 import { EMOTIONS } from '../utils/mockData';
 import artService from '../utils/artService';
@@ -17,7 +18,7 @@ const CreateArt = () => {
     secretKey: '',
     hint: '',
     pattern: null,
-    seed: Math.random(),
+    seed: crypto.randomUUID(), // Use UUID for unique, deterministic seed
   });
 
   const steps = ['Write Message', 'Choose Emotion', 'Set Secret Key', 'Preview'];
@@ -39,9 +40,9 @@ const CreateArt = () => {
 
     setError('');
     
-    // Generate pattern when moving to preview
+    // Generate pattern when moving to preview - now includes emotion for colors!
     if (activeStep === 2) {
-      const pattern = generatePattern(800, 600, formData.seed);
+      const pattern = generatePattern(800, 600, formData.seed, formData.emotion);
       setFormData({ ...formData, pattern });
     }
     
@@ -64,14 +65,20 @@ const CreateArt = () => {
     try {
       const emotion = EMOTIONS.find(e => e.id === formData.emotion);
       
+      // Encrypt message with AES encryption using the secret key
+      const encryptedContent = CryptoJS.AES.encrypt(
+        formData.message,
+        formData.secretKey
+      ).toString();
+      
       const artData = {
         message: formData.message,
-        encryptedMessage: btoa(formData.message),
+        encryptedMessage: encryptedContent,
         emotion: formData.emotion,
         emotionLabel: emotion.label,
         emotionIcon: emotion.icon,
         secretKey: formData.secretKey,
-        hint: formData.hint || 'No hint provided',
+        hint: formData.hint || '',
         pattern: formData.pattern,
         seed: formData.seed,
       };
@@ -83,8 +90,9 @@ const CreateArt = () => {
       } else {
         setError(response.error || 'Failed to create art');
       }
-    } catch {
-      setError('An error occurred. Please try again.');
+    } catch (err) {
+      console.error('Create art error:', err);
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

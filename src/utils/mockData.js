@@ -1,19 +1,14 @@
 import { generatePattern } from './patternGenerator';
 
 // Available emotions with their corresponding icons and colors
+// These map to the emotion palettes in patternGenerator.js
 export const EMOTIONS = [
-  { id: 'joy', label: 'Joy', icon: '😊', color: '#FFD700' },
-  { id: 'love', label: 'Love', icon: '❤️', color: '#FF69B4' },
-  { id: 'excitement', label: 'Excitement', icon: '🎉', color: '#FF6347' },
-  { id: 'peace', label: 'Peace', icon: '☮️', color: '#87CEEB' },
-  { id: 'hope', label: 'Hope', icon: '🌟', color: '#FFE4B5' },
-  { id: 'sadness', label: 'Sadness', icon: '😢', color: '#4682B4' },
-  { id: 'anger', label: 'Anger', icon: '😠', color: '#DC143C' },
-  { id: 'fear', label: 'Fear', icon: '😰', color: '#9370DB' },
-  { id: 'surprise', label: 'Surprise', icon: '😲', color: '#FF8C00' },
-  { id: 'nostalgia', label: 'Nostalgia', icon: '🌅', color: '#DDA0DD' },
-  { id: 'gratitude', label: 'Gratitude', icon: '🙏', color: '#98FB98' },
-  { id: 'curiosity', label: 'Curiosity', icon: '🤔', color: '#20B2AA' },
+  { id: 'passion', label: 'Passion', icon: '❤️', color: '#FF1744' },
+  { id: 'calm', label: 'Calm', icon: '🌊', color: '#0084D1' },
+  { id: 'joy', label: 'Joy', icon: '🌟', color: '#FFD600' },
+  { id: 'mystery', label: 'Mystery', icon: '🔮', color: '#7C4DFF' },
+  { id: 'nature', label: 'Nature', icon: '🌿', color: '#00C853' },
+  { id: 'serenity', label: 'Serenity', icon: '☮️', color: '#00BCD4' },
 ];
 
 // Mock users

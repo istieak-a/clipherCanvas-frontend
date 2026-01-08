@@ -137,4 +137,42 @@ export const getCurrentUser = () => {
   return userStr ? JSON.parse(userStr) : null;
 };
 
+// ===== MESSAGE/ART SERVICE FUNCTIONS =====
+
+/**
+ * Get all messages/art from gallery (Public)
+ */
+export const getMessages = async () => {
+  const data = await apiRequest('/messages', {
+    method: 'GET'
+  });
+  return data.data.messages;
+};
+
+/**
+ * Get a single message/art by ID (Public)
+ */
+export const getMessage = async (id) => {
+  const data = await apiRequest(`/messages/${id}`, {
+    method: 'GET'
+  });
+  return data.data.message;
+};
+
+/**
+ * Create a new message/art (Protected - requires auth)
+ */
+export const createMessage = async (messageData) => {
+  const data = await apiRequest('/messages', {
+    method: 'POST',
+    body: JSON.stringify({
+      encryptedContent: messageData.encryptedContent,
+      visualSeed: messageData.visualSeed,
+      emotionPalette: messageData.emotionPalette,
+      hint: messageData.hint || ''
+    })
+  });
+  return data.data.message;
+};
+
 export default apiRequest;

@@ -58,7 +58,7 @@ const Gallery = () => {
         setArtPosts(posts =>
           posts.map(post =>
             post.id === artId
-              ? { ...post, isLiked: response.isLiked, likes: post.likes + (response.isLiked ? 1 : -1) }
+              ? { ...post, isLiked: response.isLiked, likes: response.likes }
               : post
           )
         );

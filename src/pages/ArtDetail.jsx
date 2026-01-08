@@ -42,7 +42,7 @@ const ArtDetail = () => {
         setArt({
           ...art,
           isLiked: response.isLiked,
-          likes: art.likes + (response.isLiked ? 1 : -1),
+          likes: response.likes,
         });
       }
     } catch (error) {

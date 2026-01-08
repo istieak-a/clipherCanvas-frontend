@@ -1,23 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Masonry from 'react-masonry-css';
-import { generatePattern } from '../utils/patternGenerator';
+import { generatePattern, EMOTIONS } from '../utils/patternGenerator';
 
 function Home() {
   const [placeholderSecrets, setPlaceholderSecrets] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
 
   useEffect(() => {
-    // Generate placeholder patterns for demonstration
-    // TODO: Replace with actual backend API call
-    const mockSecrets = Array.from({ length: 15 }, (_, i) => ({
-      id: i + 1,
-      pattern: generatePattern(400, Math.floor(Math.random() * 200) + 300, Math.random()),
-      author: `Encoder${Math.floor(Math.random() * 999)}`,
-      likes: Math.floor(Math.random() * 500),
-      unlocks: Math.floor(Math.random() * 300),
-      timestamp: `${Math.floor(Math.random() * 24)}h ago`
-    }));
+    // Generate placeholder patterns for demonstration with different emotions
+    const emotionKeys = EMOTIONS; // ['passion', 'calm', 'joy', 'mystery', 'nature', 'serenity']
+    const mockSecrets = Array.from({ length: 15 }, (_, i) => {
+      const emotion = emotionKeys[i % emotionKeys.length];
+      return {
+        id: i + 1,
+        pattern: generatePattern(400, Math.floor(Math.random() * 200) + 300, Math.random(), emotion),
+        author: `Encoder${Math.floor(Math.random() * 999)}`,
+        likes: Math.floor(Math.random() * 500),
+        unlocks: Math.floor(Math.random() * 300),
+        timestamp: `${Math.floor(Math.random() * 24)}h ago`,
+        emotion
+      };
+    });
     setPlaceholderSecrets(mockSecrets);
   }, []);
 

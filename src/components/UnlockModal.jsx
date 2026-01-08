@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import CryptoJS from 'crypto-js';
 import artService from '../utils/artService';
+import { EMOTIONS } from '../utils/mockData';
 
 const UnlockModal = ({ open, onClose, art, onSuccess }) => {
   const [secretKey, setSecretKey] = useState('');
@@ -9,6 +11,36 @@ const UnlockModal = ({ open, onClose, art, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [unlockedMessage, setUnlockedMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
+
+  // Reset state when modal opens with new art
+  useEffect(() => {
+    if (open) {
+      setSecretKey('');
+      setError('');
+      setUnlockedMessage('');
+      setShowMessage(false);
+    }
+  }, [open, art?.id]);
+
+  // Get emotion data - fallback to first emotion if not found
+  const getEmotionData = () => {
+    if (!art) return { icon: '🎨', label: 'Art' };
+    
+    // Try to find from EMOTIONS array using art.emotion (the ID)
+    const emotionFromId = EMOTIONS.find(e => e.id === art.emotion);
+    if (emotionFromId) {
+      return { icon: emotionFromId.icon, label: emotionFromId.label };
+    }
+    
+    // Fallback to art's own properties if available
+    if (art.emotionIcon && art.emotionLabel) {
+      return { icon: art.emotionIcon, label: art.emotionLabel };
+    }
+    
+    return { icon: '🎨', label: 'Art' };
+  };
+
+  const emotionData = getEmotionData();
 
   const handleClose = () => {
     setSecretKey('');
@@ -28,22 +60,46 @@ const UnlockModal = ({ open, onClose, art, onSuccess }) => {
     setError('');
 
     try {
-      const response = await artService.unlockArtPost(art.id, secretKey);
+      // Decrypt the encrypted message using CryptoJS AES
+      const decryptedBytes = CryptoJS.AES.decrypt(
+        art.encryptedMessage,
+        secretKey
+      );
       
-      if (response.success) {
-        setUnlockedMessage(response.message);
-        setShowMessage(true);
-        if (onSuccess) {
-          onSuccess();
-        }
-      } else {
-        setError(response.message || 'Incorrect secret key. Please try again.');
+      const decryptedMessage = decryptedBytes.toString(CryptoJS.enc.Utf8);
+      
+      // Check if decryption was successful
+      if (!decryptedMessage || decryptedMessage.length === 0) {
+        setError('Incorrect secret key. Please try again.');
+        setLoading(false);
+        return;
       }
-    } catch {
-      setError('An error occurred. Please try again.');
-    } finally {
+      
+      // Successfully decrypted - show the message FIRST
+      setUnlockedMessage(decryptedMessage);
+      setShowMessage(true);
+      setLoading(false);
+      
+      // Then notify backend to track the unlock (don't await, fire and forget)
+      artService.unlockArtPost(art.id, secretKey).catch(err => {
+        console.warn('Could not track unlock:', err);
+      });
+      
+      // Note: We call onSuccess when user CLOSES the modal after seeing the message
+      // This prevents the modal from being reset while viewing the unlocked message
+    } catch (err) {
+      console.error('Decryption error:', err);
+      setError('Incorrect secret key or corrupted data. Please try again.');
       setLoading(false);
     }
+  };
+
+  const handleCloseAfterSuccess = () => {
+    // Call onSuccess to refresh data, then close
+    if (onSuccess) {
+      onSuccess();
+    }
+    handleClose();
   };
 
   const handleKeyPress = (e) => {
@@ -98,27 +154,31 @@ const UnlockModal = ({ open, onClose, art, onSuccess }) => {
               />
             </div>
 
-            {/* Art Info */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{art.userAvatar}</span>
+            {/* Art Info with Emotion */}
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{art.userAvatar || '👤'}</span>
                 <div>
-                  <p className="font-semibold text-gray-900">{art.userName}</p>
-                  <p className="text-sm text-gray-500">@{art.userUsername}</p>
+                  <p className="font-semibold text-gray-900">{art.userName || 'Anonymous'}</p>
+                  <p className="text-sm text-gray-500">@{art.userUsername || 'user'}</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-lg">{art.emotionIcon}</span>
-                <span className="text-gray-700">{art.emotionLabel}</span>
+              {/* Emotion Display - More prominent */}
+              <div className="flex items-center gap-2 bg-white rounded-lg p-3 border border-gray-200">
+                <span className="text-2xl">{emotionData.icon}</span>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Emotion</p>
+                  <p className="font-medium text-gray-900">{emotionData.label}</p>
+                </div>
               </div>
             </div>
 
             {/* Hint */}
-            {art.hint && art.hint !== 'No hint provided' && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-semibold text-blue-900 mb-1">💡 Hint:</p>
-                <p className="text-blue-800 italic">{art.hint}</p>
+            {art.hint && art.hint !== 'No hint provided' && art.hint.trim() !== '' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm font-semibold text-amber-900 mb-1">💡 Hint:</p>
+                <p className="text-amber-800 italic text-lg">{art.hint}</p>
               </div>
             )}
 
@@ -160,17 +220,17 @@ const UnlockModal = ({ open, onClose, art, onSuccess }) => {
             </div>
 
             {/* Unlocked Message */}
-            <div className="bg-linear-to-br from-[#0084D1] to-[#0070B8] rounded-lg p-6 text-white shadow-lg">
+            <div className="bg-gradient-to-br from-[#0084D1] to-[#0070B8] rounded-lg p-6 text-white shadow-lg">
               <p className="text-sm font-semibold mb-2 opacity-90">Secret Message:</p>
               <p className="text-lg leading-relaxed">{unlockedMessage}</p>
             </div>
 
-            {/* Art Info */}
-            <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-2">
-              <span className="text-2xl">{art.emotionIcon}</span>
+            {/* Emotion Info */}
+            <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-3">
+              <span className="text-3xl">{emotionData.icon}</span>
               <div>
                 <p className="text-sm text-gray-500">Emotion</p>
-                <p className="font-semibold text-gray-900">{art.emotionLabel}</p>
+                <p className="font-semibold text-gray-900">{emotionData.label}</p>
               </div>
             </div>
           </div>
@@ -196,7 +256,7 @@ const UnlockModal = ({ open, onClose, art, onSuccess }) => {
           </>
         ) : (
           <button
-            onClick={handleClose}
+            onClick={handleCloseAfterSuccess}
             className="px-6 py-2 bg-[#0084D1] text-white rounded-lg hover:bg-[#0070B8] transition-colors"
           >
             Close
