@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { 
-  loginUser as loginAPI, 
-  registerUser as registerAPI, 
-  logoutUser as logoutAPI,
+  loginUser, 
+  registerUser, 
+  logoutUser,
   getUserProfile,
-  getCurrentUser as getStoredUser
-} from '../utils/authService';
+  getCurrentUser
+} from '../utils/api';
 
 const AuthContext = createContext(null);
 
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          const storedUser = getStoredUser();
+          const storedUser = getCurrentUser();
           if (storedUser) {
             setUser(storedUser);
             setIsAuthenticated(true);
@@ -66,21 +66,21 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (credentials) => {
-    const response = await loginAPI(credentials);
+    const response = await loginUser(credentials);
     setUser(response.data.user);
     setIsAuthenticated(true);
     return response;
   };
 
   const signup = async (userData) => {
-    const response = await registerAPI(userData);
+    const response = await registerUser(userData);
     setUser(response.data.user);
     setIsAuthenticated(true);
     return response;
   };
 
   const logout = () => {
-    logoutAPI();
+    logoutUser();
     setUser(null);
     setIsAuthenticated(false);
   };

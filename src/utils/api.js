@@ -44,4 +44,97 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+// ===== AUTH SERVICE FUNCTIONS =====
+
+/**
+ * Register a new user
+ */
+export const registerUser = async (userData) => {
+  const data = await apiRequest('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      firstName: userData.firstName,
+      lastName: userData.lastName
+    })
+  });
+
+  // Store token and user data
+  localStorage.setItem('token', data.data.token);
+  localStorage.setItem('user', JSON.stringify(data.data.user));
+  return data;
+};
+
+/**
+ * Login user with credentials
+ */
+export const loginUser = async (credentials) => {
+  const data = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      email: credentials.email,
+      password: credentials.password
+    })
+  });
+
+  // Store token and user data
+  localStorage.setItem('token', data.data.token);
+  localStorage.setItem('user', JSON.stringify(data.data.user));
+  return data;
+};
+
+/**
+ * Get current user profile (Protected)
+ */
+export const getUserProfile = async () => {
+  const data = await apiRequest('/auth/profile', {
+    method: 'GET'
+  });
+  return data.data.user;
+};
+
+/**
+ * Update user profile (Protected)
+ */
+export const updateProfile = async (updates) => {
+  const data = await apiRequest('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify({
+      firstName: updates.firstName,
+      lastName: updates.lastName,
+      avatar: updates.avatar
+    })
+  });
+
+  // Update stored user data
+  localStorage.setItem('user', JSON.stringify(data.data.user));
+  return data;
+};
+
+/**
+ * Logout user
+ */
+export const logoutUser = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+};
+
+/**
+ * Check if user is authenticated
+ */
+export const isAuthenticated = () => {
+  const token = localStorage.getItem('token');
+  return !!token;
+};
+
+/**
+ * Get current user from localStorage
+ */
+export const getCurrentUser = () => {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+};
+
 export default apiRequest;
