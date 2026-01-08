@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Chip, Stepper, Step, StepLabel } from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
 import CryptoJS from 'crypto-js';
 import { generatePattern } from '../utils/patternGenerator';
 import { EMOTIONS } from '../utils/mockData';
@@ -18,13 +17,17 @@ const CreateArt = () => {
     secretKey: '',
     hint: '',
     pattern: null,
-    seed: crypto.randomUUID(), // Use UUID for unique, deterministic seed
+    seed: crypto.randomUUID(),
   });
 
-  const steps = ['Write Message', 'Choose Emotion', 'Set Secret Key', 'Preview'];
+  const steps = [
+    { label: 'Message', icon: '✍️' },
+    { label: 'Emotion', icon: '💫' },
+    { label: 'Secret Key', icon: '🔐' },
+    { label: 'Preview', icon: '👁️' },
+  ];
 
   const handleNext = () => {
-    // Validation
     if (activeStep === 0 && !formData.message.trim()) {
       setError('Please enter a message');
       return;
@@ -40,7 +43,6 @@ const CreateArt = () => {
 
     setError('');
     
-    // Generate pattern when moving to preview - now includes emotion for colors!
     if (activeStep === 2) {
       const pattern = generatePattern(800, 600, formData.seed, formData.emotion);
       setFormData({ ...formData, pattern });
@@ -65,7 +67,6 @@ const CreateArt = () => {
     try {
       const emotion = EMOTIONS.find(e => e.id === formData.emotion);
       
-      // Encrypt message with AES encryption using the secret key
       const encryptedContent = CryptoJS.AES.encrypt(
         formData.message,
         formData.secretKey
@@ -98,87 +99,128 @@ const CreateArt = () => {
     }
   };
 
+  const selectedEmotion = EMOTIONS.find(e => e.id === formData.emotion);
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Create Your Art</h1>
-          <p className="text-gray-600">Express yourself through encrypted visual art</p>
+        <div className="mb-8">
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+          >
+            <span>←</span>
+            <span>Back</span>
+          </Link>
+          <h1 className="text-3xl font-bold text-gray-900">Create Your Art</h1>
+          <p className="text-gray-600 mt-1">Express yourself through encrypted visual art</p>
         </div>
 
-        {/* Stepper */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <Stepper activeStep={activeStep} alternativeLabel>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
+        {/* Progress Steps */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+          <div className="flex items-center justify-between">
+            {steps.map((step, index) => (
+              <div key={step.label} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${
+                      index <= activeStep
+                        ? 'bg-[#0084D1] text-white shadow-lg shadow-[#0084D1]/20'
+                        : 'bg-gray-100 text-gray-400'
+                    }`}
+                  >
+                    {index < activeStep ? '✓' : step.icon}
+                  </div>
+                  <span className={`text-xs mt-2 font-medium ${
+                    index <= activeStep ? 'text-[#0084D1]' : 'text-gray-400'
+                  }`}>
+                    {step.label}
+                  </span>
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`flex-1 h-1 mx-3 rounded ${
+                    index < activeStep ? 'bg-[#0084D1]' : 'bg-gray-200'
+                  }`}></div>
+                )}
+              </div>
             ))}
-          </Stepper>
+          </div>
         </div>
 
         {/* Form Content */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          {/* Error Message */}
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+              <span className="text-red-500">⚠️</span>
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
           {/* Step 1: Message */}
           {activeStep === 0 && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">What's your message?</h2>
-              <p className="text-gray-600 mb-6">
-                Write a message that will be encrypted and hidden in your art. Only those with the
-                secret key can reveal it.
-              </p>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-[#0084D1]/10 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">✍️</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">What's your message?</h2>
+                  <p className="text-gray-600 text-sm">Write something that will be hidden in your art</p>
+                </div>
+              </div>
+              
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 placeholder="Enter your secret message..."
                 rows={8}
                 maxLength={500}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0084D1] focus:border-transparent resize-none"
+                className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0084D1] focus:border-transparent resize-none bg-gray-50 focus:bg-white transition-all outline-none"
               />
-              <div className="text-right text-sm text-gray-500">
-                {formData.message.length}/500 characters
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-500">Only visible with the secret key</p>
+                <p className="text-sm text-gray-500">{formData.message.length}/500</p>
               </div>
             </div>
           )}
 
           {/* Step 2: Emotion */}
           {activeStep === 1 && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Choose an emotion</h2>
-              <p className="text-gray-600 mb-6">
-                Select the emotion that best represents your message. This will influence the art's
-                visual style.
-              </p>
-              <div className="flex flex-wrap gap-3">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-[#0084D1]/10 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">💫</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Choose an emotion</h2>
+                  <p className="text-gray-600 text-sm">This will influence the art's colors and style</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {EMOTIONS.map((emotion) => (
-                  <Chip
+                  <button
                     key={emotion.id}
-                    label={
-                      <span className="flex items-center gap-2">
-                        <span className="text-xl">{emotion.icon}</span>
-                        <span>{emotion.label}</span>
-                      </span>
-                    }
                     onClick={() => handleEmotionSelect(emotion.id)}
-                    variant={formData.emotion === emotion.id ? 'filled' : 'outlined'}
-                    sx={{
-                      fontSize: '1rem',
-                      padding: '24px 16px',
-                      backgroundColor: formData.emotion === emotion.id ? emotion.color : 'transparent',
-                      borderColor: emotion.color,
-                      color: formData.emotion === emotion.id ? '#fff' : '#374151',
-                      '&:hover': {
-                        backgroundColor: formData.emotion === emotion.id ? emotion.color : `${emotion.color}20`,
-                      },
-                    }}
-                  />
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      formData.emotion === emotion.id
+                        ? 'border-[#0084D1] bg-[#0084D1]/5 shadow-lg'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-3xl block mb-2">{emotion.icon}</span>
+                    <span className={`font-medium ${
+                      formData.emotion === emotion.id ? 'text-[#0084D1]' : 'text-gray-900'
+                    }`}>
+                      {emotion.label}
+                    </span>
+                    <div 
+                      className="w-full h-1 rounded mt-2"
+                      style={{ backgroundColor: emotion.color }}
+                    ></div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -187,36 +229,58 @@ const CreateArt = () => {
           {/* Step 3: Secret Key & Hint */}
           {activeStep === 2 && (
             <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Set your secret key</h2>
-                <p className="text-gray-600 mb-6">
-                  Create a secret key that others will need to unlock and read your message.
-                </p>
-                <input
-                  type="text"
-                  value={formData.secretKey}
-                  onChange={(e) => setFormData({ ...formData, secretKey: e.target.value })}
-                  placeholder="Enter your secret key"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0084D1] focus:border-transparent"
-                />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-[#0084D1]/10 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">🔐</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Set your secret key</h2>
+                  <p className="text-gray-600 text-sm">Others will need this to unlock your message</p>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Add a hint (optional)</h3>
-                <p className="text-gray-600 mb-4">
-                  Give viewers a hint to help them guess the secret key.
-                </p>
-                <input
-                  type="text"
-                  value={formData.hint}
-                  onChange={(e) => setFormData({ ...formData, hint: e.target.value })}
-                  placeholder="e.g., My favorite color"
-                  maxLength={100}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0084D1] focus:border-transparent"
-                />
-                <div className="text-right text-sm text-gray-500 mt-1">
-                  {formData.hint.length}/100 characters
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Secret Key
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.secretKey}
+                    onChange={(e) => setFormData({ ...formData, secretKey: e.target.value })}
+                    placeholder="Enter your secret key"
+                    className="w-full px-4 py-3.5 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0084D1] focus:border-transparent transition-all outline-none bg-white"
+                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    🔑
+                  </span>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Hint <span className="text-gray-400">(optional)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.hint}
+                    onChange={(e) => setFormData({ ...formData, hint: e.target.value })}
+                    placeholder="e.g., My favorite color"
+                    maxLength={100}
+                    className="w-full px-4 py-3.5 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0084D1] focus:border-transparent transition-all outline-none bg-white"
+                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    💡
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5">{formData.hint.length}/100 characters</p>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-amber-800 text-sm">
+                  <strong>Remember:</strong> Keep your secret key safe! Share it only with those you want to unlock your message.
+                </p>
               </div>
             </div>
           )}
@@ -224,10 +288,20 @@ const CreateArt = () => {
           {/* Step 4: Preview */}
           {activeStep === 3 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Preview your art</h2>
-              
-              <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-                <div className="aspect-4/3 rounded-lg overflow-hidden shadow-lg">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-[#0084D1]/10 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">👁️</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Preview your art</h2>
+                  <p className="text-gray-600 text-sm">This is how your art will appear in the gallery</p>
+                </div>
+              </div>
+
+              {/* Preview Card */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden max-w-md mx-auto">
+                {/* Pattern */}
+                <div className="aspect-4/3 relative">
                   {formData.pattern && (
                     <img 
                       src={formData.pattern} 
@@ -235,72 +309,109 @@ const CreateArt = () => {
                       className="w-full h-full object-cover"
                     />
                   )}
+                  <div className="absolute top-3 right-3">
+                    <span 
+                      className="px-2 py-1 rounded-full text-xs font-medium"
+                      style={{ 
+                        backgroundColor: `${selectedEmotion?.color}20`,
+                        color: selectedEmotion?.color 
+                      }}
+                    >
+                      {selectedEmotion?.icon} {selectedEmotion?.label}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="bg-white p-4 rounded-lg shadow">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Emotion</h4>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">
-                        {EMOTIONS.find(e => e.id === formData.emotion)?.icon}
-                      </span>
-                      <span className="text-gray-900">
-                        {EMOTIONS.find(e => e.id === formData.emotion)?.label}
-                      </span>
+                {/* Info */}
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-linear-to-br from-[#0084D1] to-[#0070B8] rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      Y
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">You</p>
+                      <p className="text-xs text-gray-500">Just now</p>
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Message Length</h4>
-                    <p className="text-gray-900">{formData.message.length} characters</p>
-                  </div>
+                  {formData.hint && (
+                    <p className="text-sm text-gray-500 italic">💡 {formData.hint}</p>
+                  )}
 
-                  <div className="bg-white p-4 rounded-lg shadow col-span-2">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Hint</h4>
-                    <p className="text-gray-900 italic">
-                      {formData.hint || 'No hint provided'}
-                    </p>
+                  <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+                    <span className="flex items-center gap-1.5 text-gray-500 text-sm">
+                      <span>🤍</span> 0
+                    </span>
+                    <span className="flex items-center gap-1.5 text-gray-500 text-sm">
+                      <span>🔓</span> 0
+                    </span>
+                    <span className="flex items-center gap-1.5 text-gray-500 text-sm">
+                      <span>💬</span> 0
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-800">
-                  <strong>Note:</strong> Once published, your encrypted message will be visible only
-                  to those who enter the correct secret key.
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-500 mb-1">Message Length</p>
+                  <p className="font-semibold text-gray-900">{formData.message.length} characters</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-500 mb-1">Encryption</p>
+                  <p className="font-semibold text-gray-900">AES-256</p>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p className="text-blue-800 text-sm">
+                  Your message is encrypted and can only be unlocked with your secret key.
                 </p>
               </div>
             </div>
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t">
+          <div className="flex justify-between mt-8 pt-6 border-t border-gray-100">
             <button
               onClick={handleBack}
               disabled={activeStep === 0}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-colors ${
                 activeStep === 0
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Back
+              <span>←</span>
+              <span>Back</span>
             </button>
 
             {activeStep === steps.length - 1 ? (
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="px-6 py-2 bg-[#0084D1] text-white rounded-lg font-medium hover:bg-[#0070B8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-3 bg-[#0084D1] text-white rounded-xl font-medium hover:bg-[#0070B8] transition-colors shadow-lg shadow-[#0084D1]/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Creating...' : 'Publish Art'}
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Publish Art</span>
+                    <span>✨</span>
+                  </>
+                )}
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="px-6 py-2 bg-[#0084D1] text-white rounded-lg font-medium hover:bg-[#0070B8] transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-[#0084D1] text-white rounded-xl font-medium hover:bg-[#0070B8] transition-colors shadow-lg shadow-[#0084D1]/20"
               >
-                Next
+                <span>Continue</span>
+                <span>→</span>
               </button>
             )}
           </div>

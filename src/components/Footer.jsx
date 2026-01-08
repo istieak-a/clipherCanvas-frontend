@@ -7,7 +7,7 @@ function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Brand Section */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">CipherCanvas</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">Whispher Pattern</h3>
             <p className="text-gray-400 text-sm pr-4">
               Where feelings hide in plain sight. Express yourself through encrypted art.
             </p>
@@ -113,7 +113,7 @@ function Footer() {
         <div className="border-t border-gray-800 pt-6 md:pt-8 mt-6 md:mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
             <p className="text-gray-400 text-xs md:text-sm text-center md:text-left">
-              © {new Date().getFullYear()} CipherCanvas. All rights reserved.
+              © {new Date().getFullYear()} Whispher Pattern. All rights reserved.
             </p>
             <p className="text-gray-500 text-xs md:text-sm text-center md:text-right">
               Made with 💙 by encoders, for encoders
