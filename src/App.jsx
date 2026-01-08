@@ -9,7 +9,6 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
-import Gallery from './pages/Gallery';
 import CreateArt from './pages/CreateArt';
 import ArtDetail from './pages/ArtDetail';
 
@@ -25,7 +24,6 @@ const App = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/gallery" element={<Gallery />} />
             <Route path="/art/:id" element={<ArtDetail />} />
             <Route 
               path="/profile" 
